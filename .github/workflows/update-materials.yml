@@ -1,0 +1,62 @@
+name: Обновление материалов курса
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: course-materials-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Определить источник материалов
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          is_template=$(gh api "repos/$REPOSITORY" --jq '.is_template')
+          if [ "$is_template" = "true" ]; then
+            echo "Это шаблон курса. Перенос материалов не требуется."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "run=true" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v5
+        if: steps.source.outputs.run == 'true'
+
+      - name: Перенести материалы курса
+        if: steps.source.outputs.run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git clone --depth 1 --branch main https://github.com/kryovox/rust-start-template.git "$RUNNER_TEMP/rust-course"
+          python3 "$RUNNER_TEMP/rust-course/.github/scripts/update_materials.py" "$RUNNER_TEMP/rust-course" "$GITHUB_WORKSPACE"
+
+      - name: Сохранить обновление
+        if: steps.source.outputs.run == 'true'
+        env:
+          BRANCH: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add --all
+          if git diff --cached --quiet; then
+            echo "Новых материалов нет."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          git commit -m "materials: обновление материалов Rust"
+          git push origin "HEAD:$BRANCH" || { git pull --rebase origin "$BRANCH" && git push origin "HEAD:$BRANCH"; }
