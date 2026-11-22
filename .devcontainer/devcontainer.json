@@ -1,0 +1,13 @@
+{
+  "name": "Academy Rust Lab",
+  "image": "mcr.microsoft.com/devcontainers/rust:1-bookworm",
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": ["rust-lang.rust-analyzer"],
+      "settings": {"rust-analyzer.linkedProjects": ["academy-lab/Cargo.toml"], "editor.formatOnSave": true}
+    },
+    "codespaces": {"openFiles": ["academy-lab/docs.md", "academy-lab/src/lib.rs"]}
+  },
+  "postCreateCommand": "rustup toolchain install stable --profile default && rustc +stable --version && cargo +stable --version"
+}
