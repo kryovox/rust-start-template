@@ -1,0 +1,28 @@
+name: Academy Lab checks
+on:
+  push:
+    branches: ['academy-*', 'academyhub-v0.3']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    concurrency:
+      group: academy-rust-${{ github.ref }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Stable Rust
+        run: rustup toolchain install stable --profile minimal
+      - name: Build
+        run: cargo +stable build --locked --manifest-path academy-lab/Cargo.toml
+      - name: Check starter smoke test
+        if: github.ref == 'refs/heads/academyhub-v0.3'
+        run: cargo +stable test --locked --manifest-path academy-lab/Cargo.toml smoke
+      - name: Check student solution
+        if: github.ref != 'refs/heads/academyhub-v0.3'
+        run: cargo +stable test --locked --manifest-path academy-lab/Cargo.toml
