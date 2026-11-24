@@ -59,3 +59,5 @@ cargo run --manifest-path practice/01-variables/Cargo.toml
 После обновления на GitHub получите изменения в VS Code. Подробнее: [docs/UPDATES.md](docs/UPDATES.md).
 
 Правила сдачи: [docs/SUBMIT.md](docs/SUBMIT.md).
+
+Для практикумов Universal Trainer предусмотрен [регламент сдачи](docs/SUBMIT.md#universal-trainer--регламентированная-сдача).
