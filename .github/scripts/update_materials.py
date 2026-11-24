@@ -59,7 +59,13 @@ def update(template, student):
         raise ValueError("Нужны две разные существующие папки: шаблон и копия студента")
     result = {"added": [], "updated": [], "skipped": []}
     for relative in template_files(template):
+        parts = Path(relative).parts
+        if parts[0] in WORK_DIRS and len(parts) > 1 and parts[1] == "trainer":
+            continue
         source, destination = template / relative, student / relative
+        if any(p.exists() and not p.is_dir() for p in destination.parents if p != student and student in p.parents):
+            result["skipped"].append(relative + " (родительский путь занят файлом)")
+            continue
         if has_symlink(student, relative):
             result["skipped"].append(relative + " (символическая ссылка)")
             continue
